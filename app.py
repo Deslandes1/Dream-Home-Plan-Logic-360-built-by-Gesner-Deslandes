@@ -66,7 +66,7 @@ def draw_2d_blueprint():
     # Doors
     draw_arc_door(ax, (2.5,0), 0.6, -90, +1, 1.5)   # left entrance
     draw_arc_door(ax, (11.5,0), 0.6, -90, +1, 1.5)  # right entrance
-    draw_arc_door(ax, (5,3), 0.6, 0, +1, 1.5)       # between room1 & room2
+    draw_arc_door(ax, (5,3), 0.6, 0, +1, 1.5)        # between room1 & room2
     draw_arc_door(ax, (3,7), 0.6, 90, +1, 1.5)      # room1 to bathroom
     draw_arc_door(ax, (7,7), 0.6, 90, +1, 1.5)      # room2 to bathroom
     draw_arc_door(ax, (11,7), 0.6, 90, +1, 1.5)     # room3 to bathroom
