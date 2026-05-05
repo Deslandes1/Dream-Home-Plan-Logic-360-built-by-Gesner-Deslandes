@@ -30,7 +30,7 @@ with st.sidebar:
     st.subheader("💰 Licensing")
     st.write("One‑time payment. No subscriptions.")
     st.markdown("---")
-    st.info("💡 Professional 3D model with detailed door objects (no labels).")
+    st.info("💡 Two entrance doors (left/right) with porch roofs, all doors detailed.")
 
 # ---------- DOOR ARC HELPER (for 2D) ----------
 def draw_arc_door(ax, center, radius, orient_deg, swing_sign, lw):
@@ -43,7 +43,7 @@ def draw_arc_door(ax, center, radius, orient_deg, swing_sign, lw):
     arc = patches.Arc(center, 2*radius, 2*radius, theta1=t1, theta2=t2, color='k', lw=lw)
     ax.add_patch(arc)
 
-# ---------- 2D BLUEPRINT (unchanged) ----------
+# ---------- 2D BLUEPRINT ----------
 def draw_2d_blueprint():
     fig, ax = plt.subplots(figsize=(12, 10))
     ax.set_xlim(-2, 18)
@@ -105,7 +105,7 @@ def draw_2d_blueprint():
 
     return fig
 
-# ---------- 3D MODEL with detailed doors (no labels) ----------
+# ---------- 3D MODEL with two entrance doors and porch roofs ----------
 def generate_3d_html():
     return """
     <!DOCTYPE html>
@@ -150,7 +150,7 @@ def generate_3d_html():
             scene.fog = new THREE.FogExp2(0x111122, 0.008);
             
             const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(20, 12, 15);
+            camera.position.set(18, 10, 16);
             camera.lookAt(7, 0, 5);
             
             const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -250,16 +250,13 @@ def generate_3d_html():
             addWall(5, 8.5, th, 3);
             addWall(9, 8.5, th, 3);
             
-            // ----- DETAILED DOOR MODEL (no labels, just 3D objects) -----
+            // ----- DETAILED DOOR MODEL (same as before) -----
             const doorWood = new THREE.MeshStandardMaterial({ color: 0xc99e6f, roughness: 0.3 });
             const doorFrameMat = new THREE.MeshStandardMaterial({ color: 0xaa8866 });
             const handleMat = new THREE.MeshStandardMaterial({ color: 0xffaa66, metalness: 0.8 });
             const thresholdMat = new THREE.MeshStandardMaterial({ color: 0xcc8866 });
             
             function addDetailedDoor(x, z, orientation) {
-                // orientation: 'horizontal' means door plane is vertical (rotated around Y) – for walls along X axis (front/back walls)
-                // 'vertical' means door plane is horizontal – for walls along Z axis (side walls)
-                // For simplicity, we model door as a box with a recessed panel and a handle.
                 const doorWidth = 0.9;
                 const doorHeight = 2.0;
                 const doorThick = 0.08;
@@ -277,7 +274,7 @@ def generate_3d_html():
                 doorMesh.castShadow = true;
                 scene.add(doorMesh);
                 
-                // Add a recessed panel detail: a thinner, slightly inset box
+                // recessed panel
                 const panelMat = new THREE.MeshStandardMaterial({ color: 0xb88a5a });
                 const panelWidth = doorWidth - 0.2;
                 const panelHeight = doorHeight - 0.4;
@@ -292,7 +289,7 @@ def generate_3d_html():
                 panel.castShadow = true;
                 scene.add(panel);
                 
-                // Door frame (4 sides)
+                // frame
                 if (orientation === 'horizontal') {
                     const top = new THREE.Mesh(new THREE.BoxGeometry(doorWidth+frameMargin*2, frameThick, doorThick+0.02), doorFrameMat);
                     top.position.set(x, 1.0 + doorHeight/2 - frameThick/2, z); scene.add(top);
@@ -313,13 +310,11 @@ def generate_3d_html():
                     right.position.set(x, 1.0, z + doorWidth/2 + frameMargin); scene.add(right);
                 }
                 
-                // Handle (knob)
                 const knob = new THREE.Mesh(new THREE.SphereGeometry(0.07, 16, 16), handleMat);
                 if (orientation === 'horizontal') knob.position.set(x + 0.3, 1.0, z + 0.09);
                 else knob.position.set(x + 0.09, 1.0, z + 0.3);
                 scene.add(knob);
                 
-                // Threshold (small step on the floor)
                 const threshold = new THREE.Mesh(new THREE.BoxGeometry(doorWidth+0.1, 0.05, 0.2), thresholdMat);
                 if (orientation === 'horizontal') {
                     threshold.position.set(x, -0.02, z);
@@ -331,7 +326,7 @@ def generate_3d_html():
                 scene.add(threshold);
             }
             
-            // Place all 9 doors with proper orientation
+            // Place all 9 doors
             addDetailedDoor(2.5, 0, 'horizontal');    // left entrance
             addDetailedDoor(11.5, 0, 'horizontal');   // right entrance
             addDetailedDoor(5, 3, 'vertical');        // between room1 & room2
@@ -342,7 +337,31 @@ def generate_3d_html():
             addDetailedDoor(7, 10, 'horizontal');     // room2 -> backyard
             addDetailedDoor(11.5, 10, 'horizontal');  // room3 -> backyard
             
-            // --- Bathroom fixtures (toilet, sink, shower) ---
+            // ----- ADD PORCH ROOFS OVER THE TWO ENTRANCE DOORS -----
+            const porchRoofMat = new THREE.MeshStandardMaterial({ color: 0xaa8866 });
+            function addPorchRoof(x, z) {
+                const roofWidth = 1.4;
+                const roofDepth = 1.0;
+                const roofHeight = 2.5; // above ground
+                const porchRoof = new THREE.Mesh(new THREE.BoxGeometry(roofWidth, 0.1, roofDepth), porchRoofMat);
+                porchRoof.position.set(x, roofHeight, z);
+                porchRoof.castShadow = true;
+                scene.add(porchRoof);
+                // add two small posts
+                const postMatPorch = new THREE.MeshStandardMaterial({ color: 0xaa8866 });
+                const leftPost = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.0, 0.1), postMatPorch);
+                leftPost.position.set(x - 0.6, 1.0, z);
+                leftPost.castShadow = true;
+                scene.add(leftPost);
+                const rightPost = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.0, 0.1), postMatPorch);
+                rightPost.position.set(x + 0.6, 1.0, z);
+                rightPost.castShadow = true;
+                scene.add(rightPost);
+            }
+            addPorchRoof(2.5, 0);
+            addPorchRoof(11.5, 0);
+            
+            // --- Bathroom fixtures ---
             const bathFloorMat = new THREE.MeshStandardMaterial({ color: 0x88aaff, roughness: 0.3, metalness: 0.1 });
             const bathFloor = new THREE.Mesh(new THREE.BoxGeometry(4, 0.05, 3), bathFloorMat);
             bathFloor.position.set(7, -0.08, 8.5);
@@ -384,7 +403,7 @@ def generate_3d_html():
             room3Floor.receiveShadow = true;
             scene.add(room3Floor);
             
-            // --- Roof (pyramid-like, similar to before) ---
+            // --- Roof (main house) ---
             const roofMat = new THREE.MeshStandardMaterial({ color: 0xaa7777 });
             const roof = new THREE.Mesh(new THREE.CylinderGeometry(8, 8, 1.2, 4), roofMat);
             roof.rotation.y = Math.PI/4;
@@ -455,6 +474,6 @@ if view == "2D Blueprint":
         - Three rooms – each connects to bathroom and backyard. Two entrance doors from main road.
         """)
 else:
-    st.markdown("### 🏡 3D Interactive Model – Detailed Doors, No Labels")
+    st.markdown("### 🏡 3D Interactive Model – Two Entrance Doors with Porch Roofs")
     st.markdown("🖱️ **Left‑click + drag** to rotate | **Right‑click + drag** to pan | **Scroll** to zoom")
     components.html(generate_3d_html(), height=700, scrolling=False)
