@@ -30,7 +30,7 @@ with st.sidebar:
     st.subheader("💰 Licensing")
     st.write("One‑time payment. No subscriptions.")
     st.markdown("---")
-    st.info("💡 Professional 3D model with labeled entrance, backyard, interior & bathroom doors.")
+    st.info("💡 Professional 3D model with detailed door objects (no labels).")
 
 # ---------- DOOR ARC HELPER (for 2D) ----------
 def draw_arc_door(ax, center, radius, orient_deg, swing_sign, lw):
@@ -43,7 +43,7 @@ def draw_arc_door(ax, center, radius, orient_deg, swing_sign, lw):
     arc = patches.Arc(center, 2*radius, 2*radius, theta1=t1, theta2=t2, color='k', lw=lw)
     ax.add_patch(arc)
 
-# ---------- 2D BLUEPRINT ----------
+# ---------- 2D BLUEPRINT (unchanged) ----------
 def draw_2d_blueprint():
     fig, ax = plt.subplots(figsize=(12, 10))
     ax.set_xlim(-2, 18)
@@ -63,7 +63,7 @@ def draw_2d_blueprint():
     ax.plot([5,5],[0,7], 'k-', lw=2)    # between room1 & room2
     ax.plot([9,9],[0,7], 'k-', lw=2)    # between room2 & room3
 
-    # Doors
+    # Doors (2D representation)
     draw_arc_door(ax, (2.5,0), 0.6, -90, +1, 1.5)   # left entrance
     draw_arc_door(ax, (11.5,0), 0.6, -90, +1, 1.5)  # right entrance
     draw_arc_door(ax, (5,3), 0.6, 0, +1, 1.5)       # between room1 & room2
@@ -105,7 +105,7 @@ def draw_2d_blueprint():
 
     return fig
 
-# ---------- 3D MODEL (with labeled doors) ----------
+# ---------- 3D MODEL with detailed doors (no labels) ----------
 def generate_3d_html():
     return """
     <!DOCTYPE html>
@@ -205,7 +205,7 @@ def generate_3d_html():
             ground.receiveShadow = true;
             scene.add(ground);
             
-            // --- Simple fence ---
+            // --- Simple fence (posts + rails) ---
             const fenceMat = new THREE.MeshStandardMaterial({ color: 0xbc9a6c });
             const postMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b });
             const fencePoints = [[-2,-2],[16,-2],[16,12],[-2,12],[-2,-2]];
@@ -240,100 +240,115 @@ def generate_3d_html():
                 mesh.castShadow = mesh.receiveShadow = true;
                 scene.add(mesh);
             }
-            // Outer walls
             addWall(7, 0, 14, th);
             addWall(14, 5, th, 10);
             addWall(7, 10, 14, th);
             addWall(0, 5, th, 10);
-            // Internal
             addWall(5, 3.5, th, 7);
             addWall(9, 3.5, th, 7);
             addWall(7, 8.5, 4, th);
             addWall(5, 8.5, th, 3);
             addWall(9, 8.5, th, 3);
             
-            // --- Professional Door with frame and knob ---
-            const doorMaterial = new THREE.MeshStandardMaterial({ color: 0xd2a679, roughness: 0.2 });
-            const frameMaterial = new THREE.MeshStandardMaterial({ color: 0xaa8866 });
-            const knobMaterial = new THREE.MeshStandardMaterial({ color: 0xffaa33, metalness: 0.8 });
+            // ----- DETAILED DOOR MODEL (no labels, just 3D objects) -----
+            const doorWood = new THREE.MeshStandardMaterial({ color: 0xc99e6f, roughness: 0.3 });
+            const doorFrameMat = new THREE.MeshStandardMaterial({ color: 0xaa8866 });
+            const handleMat = new THREE.MeshStandardMaterial({ color: 0xffaa66, metalness: 0.8 });
+            const thresholdMat = new THREE.MeshStandardMaterial({ color: 0xcc8866 });
             
-            function addDoorWithFrame(x, z, orient) {
-                const width = 0.9, height = 2.0, depth = 0.1;
+            function addDetailedDoor(x, z, orientation) {
+                // orientation: 'horizontal' means door plane is vertical (rotated around Y) – for walls along X axis (front/back walls)
+                // 'vertical' means door plane is horizontal – for walls along Z axis (side walls)
+                // For simplicity, we model door as a box with a recessed panel and a handle.
+                const doorWidth = 0.9;
+                const doorHeight = 2.0;
+                const doorThick = 0.08;
                 const frameThick = 0.05;
                 const frameMargin = 0.03;
-                let door;
-                if (orient === 'horizontal') {
-                    door = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), doorMaterial);
-                    door.position.set(x, 1.0, z);
+                
+                let doorMesh;
+                if (orientation === 'horizontal') {
+                    doorMesh = new THREE.Mesh(new THREE.BoxGeometry(doorWidth, doorHeight, doorThick), doorWood);
+                    doorMesh.position.set(x, 1.0, z);
                 } else {
-                    door = new THREE.Mesh(new THREE.BoxGeometry(depth, height, width), doorMaterial);
-                    door.position.set(x, 1.0, z);
+                    doorMesh = new THREE.Mesh(new THREE.BoxGeometry(doorThick, doorHeight, doorWidth), doorWood);
+                    doorMesh.position.set(x, 1.0, z);
                 }
-                door.castShadow = true;
-                scene.add(door);
-                // frame
-                if (orient === 'horizontal') {
-                    const top = new THREE.Mesh(new THREE.BoxGeometry(width+frameMargin*2, frameThick, depth+0.02), frameMaterial);
-                    top.position.set(x, 1.0 + height/2 - frameThick/2, z); scene.add(top);
-                    const bottom = new THREE.Mesh(new THREE.BoxGeometry(width+frameMargin*2, frameThick, depth+0.02), frameMaterial);
-                    bottom.position.set(x, 1.0 - height/2 + frameThick/2, z); scene.add(bottom);
-                    const left = new THREE.Mesh(new THREE.BoxGeometry(frameThick, height, depth+0.02), frameMaterial);
-                    left.position.set(x - width/2 - frameMargin, 1.0, z); scene.add(left);
-                    const right = new THREE.Mesh(new THREE.BoxGeometry(frameThick, height, depth+0.02), frameMaterial);
-                    right.position.set(x + width/2 + frameMargin, 1.0, z); scene.add(right);
+                doorMesh.castShadow = true;
+                scene.add(doorMesh);
+                
+                // Add a recessed panel detail: a thinner, slightly inset box
+                const panelMat = new THREE.MeshStandardMaterial({ color: 0xb88a5a });
+                const panelWidth = doorWidth - 0.2;
+                const panelHeight = doorHeight - 0.4;
+                let panel;
+                if (orientation === 'horizontal') {
+                    panel = new THREE.Mesh(new THREE.BoxGeometry(panelWidth, panelHeight, 0.02), panelMat);
+                    panel.position.set(x, 1.0, z + (doorThick/2 + 0.01));
                 } else {
-                    const top = new THREE.Mesh(new THREE.BoxGeometry(depth+0.02, frameThick, width+frameMargin*2), frameMaterial);
-                    top.position.set(x, 1.0 + height/2 - frameThick/2, z); scene.add(top);
-                    const bottom = new THREE.Mesh(new THREE.BoxGeometry(depth+0.02, frameThick, width+frameMargin*2), frameMaterial);
-                    bottom.position.set(x, 1.0 - height/2 + frameThick/2, z); scene.add(bottom);
-                    const left = new THREE.Mesh(new THREE.BoxGeometry(depth+0.02, height, frameThick), frameMaterial);
-                    left.position.set(x, 1.0, z - width/2 - frameMargin); scene.add(left);
-                    const right = new THREE.Mesh(new THREE.BoxGeometry(depth+0.02, height, frameThick), frameMaterial);
-                    right.position.set(x, 1.0, z + width/2 + frameMargin); scene.add(right);
+                    panel = new THREE.Mesh(new THREE.BoxGeometry(0.02, panelHeight, panelWidth), panelMat);
+                    panel.position.set(x + (doorThick/2 + 0.01), 1.0, z);
                 }
-                const knob = new THREE.Mesh(new THREE.SphereGeometry(0.08, 16, 16), knobMaterial);
-                if (orient === 'horizontal') knob.position.set(x + 0.3, 1.0, z + 0.06);
-                else knob.position.set(x + 0.06, 1.0, z + 0.3);
+                panel.castShadow = true;
+                scene.add(panel);
+                
+                // Door frame (4 sides)
+                if (orientation === 'horizontal') {
+                    const top = new THREE.Mesh(new THREE.BoxGeometry(doorWidth+frameMargin*2, frameThick, doorThick+0.02), doorFrameMat);
+                    top.position.set(x, 1.0 + doorHeight/2 - frameThick/2, z); scene.add(top);
+                    const bottom = new THREE.Mesh(new THREE.BoxGeometry(doorWidth+frameMargin*2, frameThick, doorThick+0.02), doorFrameMat);
+                    bottom.position.set(x, 1.0 - doorHeight/2 + frameThick/2, z); scene.add(bottom);
+                    const left = new THREE.Mesh(new THREE.BoxGeometry(frameThick, doorHeight, doorThick+0.02), doorFrameMat);
+                    left.position.set(x - doorWidth/2 - frameMargin, 1.0, z); scene.add(left);
+                    const right = new THREE.Mesh(new THREE.BoxGeometry(frameThick, doorHeight, doorThick+0.02), doorFrameMat);
+                    right.position.set(x + doorWidth/2 + frameMargin, 1.0, z); scene.add(right);
+                } else {
+                    const top = new THREE.Mesh(new THREE.BoxGeometry(doorThick+0.02, frameThick, doorWidth+frameMargin*2), doorFrameMat);
+                    top.position.set(x, 1.0 + doorHeight/2 - frameThick/2, z); scene.add(top);
+                    const bottom = new THREE.Mesh(new THREE.BoxGeometry(doorThick+0.02, frameThick, doorWidth+frameMargin*2), doorFrameMat);
+                    bottom.position.set(x, 1.0 - doorHeight/2 + frameThick/2, z); scene.add(bottom);
+                    const left = new THREE.Mesh(new THREE.BoxGeometry(doorThick+0.02, doorHeight, frameThick), doorFrameMat);
+                    left.position.set(x, 1.0, z - doorWidth/2 - frameMargin); scene.add(left);
+                    const right = new THREE.Mesh(new THREE.BoxGeometry(doorThick+0.02, doorHeight, frameThick), doorFrameMat);
+                    right.position.set(x, 1.0, z + doorWidth/2 + frameMargin); scene.add(right);
+                }
+                
+                // Handle (knob)
+                const knob = new THREE.Mesh(new THREE.SphereGeometry(0.07, 16, 16), handleMat);
+                if (orientation === 'horizontal') knob.position.set(x + 0.3, 1.0, z + 0.09);
+                else knob.position.set(x + 0.09, 1.0, z + 0.3);
                 scene.add(knob);
+                
+                // Threshold (small step on the floor)
+                const threshold = new THREE.Mesh(new THREE.BoxGeometry(doorWidth+0.1, 0.05, 0.2), thresholdMat);
+                if (orientation === 'horizontal') {
+                    threshold.position.set(x, -0.02, z);
+                } else {
+                    threshold.rotation.y = Math.PI/2;
+                    threshold.position.set(x, -0.02, z);
+                }
+                threshold.receiveShadow = true;
+                scene.add(threshold);
             }
             
-            // Add all doors
-            addDoorWithFrame(2.5, 0, 'horizontal');   // left entrance
-            addDoorWithFrame(11.5, 0, 'horizontal');  // right entrance
-            addDoorWithFrame(5, 3, 'vertical');       // between room1 & room2
-            addDoorWithFrame(3, 7, 'horizontal');     // room1 -> bathroom
-            addDoorWithFrame(7, 7, 'horizontal');     // room2 -> bathroom
-            addDoorWithFrame(11, 7, 'horizontal');    // room3 -> bathroom
-            addDoorWithFrame(2.5, 10, 'horizontal');  // room1 -> backyard
-            addDoorWithFrame(7, 10, 'horizontal');    // room2 -> backyard
-            addDoorWithFrame(11.5, 10, 'horizontal'); // room3 -> backyard
+            // Place all 9 doors with proper orientation
+            addDetailedDoor(2.5, 0, 'horizontal');    // left entrance
+            addDetailedDoor(11.5, 0, 'horizontal');   // right entrance
+            addDetailedDoor(5, 3, 'vertical');        // between room1 & room2
+            addDetailedDoor(3, 7, 'horizontal');      // room1 -> bathroom
+            addDetailedDoor(7, 7, 'horizontal');      // room2 -> bathroom
+            addDetailedDoor(11, 7, 'horizontal');     // room3 -> bathroom
+            addDetailedDoor(2.5, 10, 'horizontal');   // room1 -> backyard
+            addDetailedDoor(7, 10, 'horizontal');     // room2 -> backyard
+            addDetailedDoor(11.5, 10, 'horizontal');  // room3 -> backyard
             
-            // --- Door Labels (CSS2D) to make each door identifiable ---
-            function makeDoorLabel(text, x, z, yOff=1.0) {
-                const div = document.createElement('div');
-                div.textContent = text;
-                div.style.cssText = 'color:#ffaa66; font-size:12px; font-weight:bold; background:rgba(0,0,0,0.7); padding:2px 6px; border-radius:12px; border:1px solid #ffaa66; white-space: nowrap;';
-                const label = new CSS2DObject(div);
-                label.position.set(x, yOff + 0.5, z);
-                scene.add(label);
-            }
-            makeDoorLabel('Entrance Door', 2.5, 0, 0);
-            makeDoorLabel('Entrance Door', 11.5, 0, 0);
-            makeDoorLabel('To Room 2', 5, 3, 0);
-            makeDoorLabel('To Bathroom', 3, 7, 0);
-            makeDoorLabel('To Bathroom', 7, 7, 0);
-            makeDoorLabel('To Bathroom', 11, 7, 0);
-            makeDoorLabel('Backyard Door', 2.5, 10, 0);
-            makeDoorLabel('Backyard Door', 7, 10, 0);
-            makeDoorLabel('Backyard Door', 11.5, 10, 0);
-            
-            // --- Bathroom features (toilet, sink, shower) ---
+            // --- Bathroom fixtures (toilet, sink, shower) ---
             const bathFloorMat = new THREE.MeshStandardMaterial({ color: 0x88aaff, roughness: 0.3, metalness: 0.1 });
             const bathFloor = new THREE.Mesh(new THREE.BoxGeometry(4, 0.05, 3), bathFloorMat);
             bathFloor.position.set(7, -0.08, 8.5);
             bathFloor.receiveShadow = true;
             scene.add(bathFloor);
-            // Toilet
+            
             const toiletBase = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.8), new THREE.MeshStandardMaterial({ color: 0xffffff }));
             toiletBase.position.set(5.5, 0.1, 9);
             toiletBase.castShadow = true;
@@ -342,12 +357,12 @@ def generate_3d_html():
             toiletTank.position.set(5.5, 0.5, 9);
             toiletTank.castShadow = true;
             scene.add(toiletTank);
-            // Sink
+            
             const sink = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.2, 16), new THREE.MeshStandardMaterial({ color: 0xccccdd, metalness: 0.6 }));
             sink.position.set(8.5, 0.2, 9);
             sink.castShadow = true;
             scene.add(sink);
-            // Shower glass
+            
             const showerGlass = new THREE.MeshStandardMaterial({ color: 0x88aaff, transparent: true, opacity: 0.4 });
             const showerPanel = new THREE.Mesh(new THREE.BoxGeometry(0.05, 2.0, 1.2), showerGlass);
             showerPanel.position.set(7.7, 1.0, 9.3);
@@ -369,7 +384,7 @@ def generate_3d_html():
             room3Floor.receiveShadow = true;
             scene.add(room3Floor);
             
-            // --- Roof ---
+            // --- Roof (pyramid-like, similar to before) ---
             const roofMat = new THREE.MeshStandardMaterial({ color: 0xaa7777 });
             const roof = new THREE.Mesh(new THREE.CylinderGeometry(8, 8, 1.2, 4), roofMat);
             roof.rotation.y = Math.PI/4;
@@ -377,7 +392,7 @@ def generate_3d_html():
             roof.castShadow = true;
             scene.add(roof);
             
-            // --- Room labels (permanent) ---
+            // --- Room labels (only room names, no door labels) ---
             function makeLabel(text, x, z, yOff=1.2) {
                 const div = document.createElement('div');
                 div.textContent = text;
@@ -391,8 +406,8 @@ def generate_3d_html():
             makeLabel('ROOM 3', 11.5, 3.5);
             makeLabel('BATHROOM', 7, 8.5);
             makeLabel('BACKYARD', 7, 12.5, 0.8);
-            makeLabel('ENTRANCE (Left)', 2.5, -1, 0.5);
-            makeLabel('ENTRANCE (Right)', 11.5, -1, 0.5);
+            makeLabel('ENTRANCE', 2.5, -1, 0.5);
+            makeLabel('ENTRANCE', 11.5, -1, 0.5);
             
             // --- Front yard grass patch ---
             const frontGrass = new THREE.Mesh(new THREE.PlaneGeometry(14, 3), grassMat);
@@ -401,7 +416,7 @@ def generate_3d_html():
             frontGrass.receiveShadow = true;
             scene.add(frontGrass);
             
-            // --- Animation loop ---
+            // --- Animation ---
             function animate() {
                 requestAnimationFrame(animate);
                 controls.update();
@@ -440,6 +455,6 @@ if view == "2D Blueprint":
         - Three rooms – each connects to bathroom and backyard. Two entrance doors from main road.
         """)
 else:
-    st.markdown("### 🏡 3D Interactive Model – Engineering Drawings with All Doors Labeled")
+    st.markdown("### 🏡 3D Interactive Model – Detailed Doors, No Labels")
     st.markdown("🖱️ **Left‑click + drag** to rotate | **Right‑click + drag** to pan | **Scroll** to zoom")
     components.html(generate_3d_html(), height=700, scrolling=False)
