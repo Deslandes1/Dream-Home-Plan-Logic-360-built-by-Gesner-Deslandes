@@ -7,12 +7,12 @@ import math
 import numpy as np
 
 st.set_page_config(
-    page_title="GlobalInternet.py | House Logic Engine 360",
+    page_title="GlobalInternet.py | House Plan 360",
     page_icon="🌍",
     layout="wide"
 )
 
-# ---------- SIDEBAR (spinning globe, info, licensing) ----------
+# ---------- SIDEBAR ----------
 with st.sidebar:
     st.markdown("""
         <style>
@@ -28,11 +28,11 @@ with st.sidebar:
     st.markdown("✉️ **Email:** deslandes78@gmail.com")
     st.markdown("---")
     st.subheader("💰 Licensing")
-    st.write("One-time payment. No subscriptions.")
+    st.write("One‑time payment. No subscriptions.")
     st.markdown("---")
-    st.info("💡 High-fidelity line‑plan modifications to 2D & 3D.")
+    st.info("💡 Custom 3‑room design with multiple backyard & entrance doors.")
 
-# ---------- HELPER: Draw door arc ----------
+# ---------- DOOR ARC HELPER ----------
 def draw_arc_door(ax, center, radius, orient_deg, swing_sign, lw):
     orient_rad = math.radians(orient_deg)
     p_end = (center[0] + radius * math.cos(orient_rad),
@@ -43,72 +43,98 @@ def draw_arc_door(ax, center, radius, orient_deg, swing_sign, lw):
     arc = patches.Arc(center, 2*radius, 2*radius, theta1=t1, theta2=t2, color='k', lw=lw)
     ax.add_patch(arc)
 
-# ---------- 2D BLUEPRINT ----------
+# ---------- 2D BLUEPRINT (new layout) ----------
 def draw_2d_blueprint():
     fig, ax = plt.subplots(figsize=(12, 10))
-    ax.set_xlim(-2, 22)
-    ax.set_ylim(-2, 15)
+    ax.set_xlim(-2, 18)
+    ax.set_ylim(-2, 14)
     ax.set_aspect('equal')
     ax.axis('off')
 
-    # Outer walls (thick)
-    walls = [((0,0),(18,0)), ((18,0),(18,12)), ((18,12),(0,12)), ((0,12),(0,0))]
-    for (x1,y1),(x2,y2) in walls:
+    # Outer walls (house footprint: width 14m, depth 10m)
+    # Let's place house from x=0 to 14, y=0 to 10
+    # Entrance (main road) at y=0 (bottom)
+    # Backyard at y=10 (top)
+    # Left and right walls at x=0 and x=14
+    outer = [((0,0),(14,0)), ((14,0),(14,10)), ((14,10),(0,10)), ((0,10),(0,0))]
+    for (x1,y1),(x2,y2) in outer:
         ax.plot([x1,x2],[y1,y2], 'k-', lw=4, solid_capstyle='round')
 
-    # Inner walls
-    ax.plot([10,10],[0,7], 'k-', lw=2)
-    ax.plot([10,18],[7,7], 'k-', lw=2)
-    ax.plot([14,18],[4,4], 'k-', lw=2)
-    ax.plot([14,14],[4,7], 'k-', lw=2)
+    # Internal walls
+    # Two vertical walls dividing into three rooms (approx widths: 5, 4, 5)
+    # Room 1 (left): x 0-5, Room 2 (middle): x 5-9, Room 3 (right): x 9-14
+    # Horizontal walls at y=5 create corridor? No, the rooms span full depth, but we need doors to backyard.
+    # Simpler: three rooms side by side, each with door to backyard (top wall) and two entrance doors (bottom wall) for left and right rooms.
+    # Bathroom shared? Actually "all 3 rooms connected to bathroom" – best to place bathroom in the middle of the back wall.
+    # Let's place bathroom as a small room at top center, with three doors (one from each room).
+    # Bathroom dimensions: x=5 to 9, y=7 to 10 (3m deep)
+    ax.plot([5,5],[7,10], 'k-', lw=2)   # left wall of bathroom
+    ax.plot([9,9],[7,10], 'k-', lw=2)   # right wall of bathroom
+    ax.plot([5,9],[7,7], 'k-', lw=2)    # front wall of bathroom (facing rooms)
 
-    # Doors
-    draw_arc_door(ax, (10,3), 0.6, 0, +1, 1.5)
-    ax.plot([10,10.6],[3,3], 'b-', lw=1.5)
-    draw_arc_door(ax, (14,7), 0.6, 90, +1, 1.5)
-    ax.plot([14,14],[7,7.6], 'b-', lw=1.5)
-    draw_arc_door(ax, (10,8.5), 0.6, 0, +1, 1.5)
-    ax.plot([10,10.6],[8.5,8.5], 'b-', lw=1.5)
-    draw_arc_door(ax, (16,7), 0.6, 90, +1, 1.5)
-    ax.plot([16,16],[7,7.6], 'b-', lw=1.5)
-    draw_arc_door(ax, (14,4), 0.6, 180, +1, 1.5)
-    ax.plot([14,14],[4,3.4], 'b-', lw=1.5)
+    # Walls separating the three main rooms (full height from y=0 to y=7)
+    ax.plot([5,5],[0,7], 'k-', lw=2)    # between room1 and room2 (up to bathroom)
+    ax.plot([9,9],[0,7], 'k-', lw=2)    # between room2 and room3 (up to bathroom)
 
-    # Windows
-    ax.plot([0,0],[4,6], 'b-', lw=3)
-    ax.plot([11,13],[0,0], 'b-', lw=3)
-    ax.plot([12,14],[12,12], 'b-', lw=3)
-    ax.plot([18,18],[9,11], 'b-', lw=3)
+    # ----- DOORS -----
+    # 2 entrance doors on main road (bottom wall)
+    draw_arc_door(ax, (2.5,0), 0.6, -90, +1, 1.5)   # left entrance (room1)
+    draw_arc_door(ax, (11.5,0), 0.6, -90, +1, 1.5)  # right entrance (room3)
+
+    # Door between room1 and room2 (on the wall x=5 at y≈3)
+    draw_arc_door(ax, (5,3), 0.6, 0, +1, 1.5)
+
+    # Doors from each room to bathroom (on the wall y=7)
+    # Room1 to bathroom: door at (x≈3, y=7)
+    draw_arc_door(ax, (3,7), 0.6, 90, +1, 1.5)
+    # Room2 to bathroom: door at (x≈7, y=7)
+    draw_arc_door(ax, (7,7), 0.6, 90, +1, 1.5)
+    # Room3 to bathroom: door at (x≈11, y=7)
+    draw_arc_door(ax, (11,7), 0.6, 90, +1, 1.5)
+
+    # Three doors to backyard (top wall, y=10)
+    # Room1 backyard door at (x≈2.5, y=10)
+    draw_arc_door(ax, (2.5,10), 0.6, 90, +1, 1.5)
+    # Room2 backyard door at (x≈7, y=10)
+    draw_arc_door(ax, (7,10), 0.6, 90, +1, 1.5)
+    # Room3 backyard door at (x≈11.5, y=10)
+    draw_arc_door(ax, (11.5,10), 0.6, 90, +1, 1.5)
+
+    # Windows (optional, for realism)
+    ax.plot([0,0],[2,4], 'b-', lw=3)      # left wall window
+    ax.plot([14,14],[2,4], 'b-', lw=3)    # right wall window
+    # bathroom window on back wall
+    ax.plot([6,8],[10,10], 'b-', lw=3)
 
     # Room labels
     font = FontProperties(weight='bold', size=10)
-    ax.text(5,6,"LIVING ROOM",ha='center',va='center',fontproperties=font,bbox=dict(facecolor='white',alpha=0.7))
-    ax.text(14,3,"KITCHEN",ha='center',va='center',fontproperties=font,bbox=dict(facecolor='white',alpha=0.7))
-    ax.text(14,9.5,"BEDROOM 1",ha='center',va='center',fontproperties=font,bbox=dict(facecolor='white',alpha=0.7))
-    ax.text(6,9.5,"BEDROOM 2",ha='center',va='center',fontproperties=font,bbox=dict(facecolor='white',alpha=0.7))
-    ax.text(16,5.5,"BATH",ha='center',va='center',fontproperties=font,bbox=dict(facecolor='white',alpha=0.7))
-    ax.text(2,0.8,"ENTRY",ha='center',va='center',fontproperties=font,bbox=dict(facecolor='white',alpha=0.7))
+    ax.text(2.5, 3.5, "ROOM 1", ha='center', fontproperties=font, bbox=dict(facecolor='white',alpha=0.7))
+    ax.text(7, 3.5, "ROOM 2", ha='center', fontproperties=font, bbox=dict(facecolor='white',alpha=0.7))
+    ax.text(11.5, 3.5, "ROOM 3", ha='center', fontproperties=font, bbox=dict(facecolor='white',alpha=0.7))
+    ax.text(7, 8.5, "BATHROOM", ha='center', fontproperties=font, bbox=dict(facecolor='white',alpha=0.7))
 
-    # Dimensions (simple lines)
-    ax.annotate('', xy=(0,-1), xytext=(18,-1), arrowprops=dict(arrowstyle='<->', color='red', lw=1.5))
-    ax.text(9,-1.5,"18.0 m",ha='center',color='red',fontsize=9)
-    ax.annotate('', xy=(19,0), xytext=(19,12), arrowprops=dict(arrowstyle='<->', color='red', lw=1.5))
-    ax.text(19.5,6,"12.0 m",ha='center',color='red',fontsize=9,rotation=90)
-    ax.annotate('', xy=(0,-1.2), xytext=(10,-1.2), arrowprops=dict(arrowstyle='<->', color='red', lw=1))
-    ax.text(5,-1.7,"10.0 m",ha='center',color='red',fontsize=8)
+    # Entrance labels
+    ax.text(2.5, -0.5, "ENTRANCE\n(Left)", ha='center', fontsize=8, color='blue')
+    ax.text(11.5, -0.5, "ENTRANCE\n(Right)", ha='center', fontsize=8, color='blue')
+    ax.text(7, 10.5, "BACKYARD", ha='center', fontsize=8, color='green')
 
-    # Yard / parking boundaries
-    ax.plot([-3,-3],[-2,14], 'g--', lw=1, alpha=0.6)
-    ax.plot([21,21],[-2,14], 'g--', lw=1, alpha=0.6)
-    ax.plot([-3,21],[14,14], 'g--', lw=1, alpha=0.6)
-    ax.plot([-3,21],[-2,-2], 'g--', lw=1, alpha=0.6)
-    ax.text(-2,6,"FRONT YARD", rotation=90, fontsize=8, color='green', alpha=0.7)
-    ax.text(10,13,"BACKYARD", fontsize=8, color='green', alpha=0.7, ha='center')
-    ax.text(19.5,4,"PARKING", rotation=90, fontsize=8, color='blue', alpha=0.7)
+    # Simple dimensions
+    ax.annotate('', xy=(0,-1.2), xytext=(14,-1.2), arrowprops=dict(arrowstyle='<->', color='red', lw=1.5))
+    ax.text(7,-1.7,"14.0 m", ha='center', color='red', fontsize=9)
+    ax.annotate('', xy=(15,0), xytext=(15,10), arrowprops=dict(arrowstyle='<->', color='red', lw=1.5))
+    ax.text(15.5,5,"10.0 m", ha='center', color='red', fontsize=9, rotation=90)
+
+    # Yard / fence boundary (simple property line)
+    ax.plot([-2,-2],[-2,12], 'g--', lw=1, alpha=0.6)
+    ax.plot([16,16],[-2,12], 'g--', lw=1, alpha=0.6)
+    ax.plot([-2,16],[12,12], 'g--', lw=1, alpha=0.6)
+    ax.plot([-2,16],[-2,-2], 'g--', lw=1, alpha=0.6)
+    ax.text(-1,5,"FRONT YARD (Main Road)", rotation=90, fontsize=8, color='green', alpha=0.7)
+    ax.text(8,11.5,"BACKYARD", fontsize=8, color='green', alpha=0.7, ha='center')
 
     return fig
 
-# ---------- 3D MODEL (Three.js) with auto-rotate ----------
+# ---------- 3D MODEL (walls, doors, openings) ----------
 def generate_3d_html():
     return """
     <!DOCTYPE html>
@@ -118,7 +144,7 @@ def generate_3d_html():
     </head>
     <body>
         <div id="info" style="position:absolute; top:20px; left:20px; color:white; background:rgba(0,0,0,0.6); padding:8px 15px; border-radius:8px; font-family:Arial; z-index:100; pointer-events:none;">
-            🏠 3D House – Auto‑spinning | Drag to rotate | Scroll to zoom
+            🏠 3D House – Drag to rotate | Right‑click pan | Scroll zoom
         </div>
         <script type="importmap">
             {
@@ -137,8 +163,8 @@ def generate_3d_html():
             scene.background = new THREE.Color(0x111122);
             scene.fog = new THREE.FogExp2(0x111122, 0.008);
             const camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 1000);
-            camera.position.set(22, 14, 18);
-            camera.lookAt(9, 0, 6);
+            camera.position.set(18, 12, 15);
+            camera.lookAt(7, 0, 5);
             const renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.shadowMap.enabled = true;
@@ -149,16 +175,13 @@ def generate_3d_html():
             labelRenderer.domElement.style.top = '0px';
             labelRenderer.domElement.style.left = '0px';
             document.body.appendChild(labelRenderer.domElement);
-
-            // OrbitControls with autoRotate enabled
             const controls = new OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;          // smooth inertia
+            controls.enableDamping = true;
             controls.dampingFactor = 0.05;
-            controls.autoRotate = true;
-            controls.autoRotateSpeed = 1.0;        // speed (1.0 = ~8 seconds per full turn)
+            controls.autoRotate = false;  // manual only
             controls.enableZoom = true;
             controls.enablePan = true;
-            controls.target.set(9, 2, 6);
+            controls.target.set(7, 2, 5);
 
             // Lighting
             const ambient = new THREE.AmbientLight(0x404060);
@@ -168,42 +191,24 @@ def generate_3d_html():
             dirLight.castShadow = true;
             scene.add(dirLight);
             const fill = new THREE.PointLight(0xccaa88, 0.3);
-            fill.position.set(9, -1, 6);
+            fill.position.set(7, -1, 5);
             scene.add(fill);
             const rim = new THREE.PointLight(0xffaa66, 0.4);
             rim.position.set(0, 5, 15);
             scene.add(rim);
 
-            // Ground & yards
+            // Ground (grass)
             const grassMat = new THREE.MeshStandardMaterial({ color: 0x5a9e4e, roughness: 0.8 });
-            const frontYard = new THREE.Mesh(new THREE.PlaneGeometry(24, 6), grassMat);
-            frontYard.rotation.x = -Math.PI/2;
-            frontYard.position.set(9, -0.1, -3);
-            frontYard.receiveShadow = true;
-            scene.add(frontYard);
-            const backYard = new THREE.Mesh(new THREE.PlaneGeometry(24, 6), grassMat);
-            backYard.rotation.x = -Math.PI/2;
-            backYard.position.set(9, -0.1, 15);
-            backYard.receiveShadow = true;
-            scene.add(backYard);
+            const ground = new THREE.Mesh(new THREE.PlaneGeometry(22, 18), grassMat);
+            ground.rotation.x = -Math.PI/2;
+            ground.position.y = -0.1;
+            ground.receiveShadow = true;
+            scene.add(ground);
 
-            // Parking
-            const asphalt = new THREE.MeshStandardMaterial({ color: 0x444444 });
-            const parking = new THREE.Mesh(new THREE.PlaneGeometry(5, 8), asphalt);
-            parking.rotation.x = -Math.PI/2;
-            parking.position.set(20.5, -0.08, 4);
-            parking.receiveShadow = true;
-            scene.add(parking);
-            for (let i=0; i<3; i++) {
-                const line = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.05, 1.5), new THREE.MeshStandardMaterial({ color: 0xffffff }));
-                line.position.set(20.5, -0.02, 2 + i*2.5);
-                scene.add(line);
-            }
-
-            // Fence
+            // Fence (simple property boundary)
             const fenceMat = new THREE.MeshStandardMaterial({ color: 0xbc9a6c });
             const postMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b });
-            const fencePoints = [[-3,-2],[21,-2],[21,14],[-3,14],[-3,-2]];
+            const fencePoints = [[-2,-2],[16,-2],[16,12],[-2,12],[-2,-2]];
             for(let i=0; i<fencePoints.length-1; i++) {
                 const p1=fencePoints[i], p2=fencePoints[i+1];
                 const dx=p2[0]-p1[0], dz=p2[1]-p1[1];
@@ -224,90 +229,121 @@ def generate_3d_html():
                 }
             }
 
-            // Walls
+            // Walls (solid stucco)
             const wallMat = new THREE.MeshStandardMaterial({ color: 0xcdc9c9, roughness: 0.4 });
             const th=0.3, h=3.0;
             function addWall(x,z,w,d,rotY=0) {
-                const box = new THREE.BoxGeometry(w,h,d);
+                const box = new THREE.BoxGeometry(w, h, d);
                 const mesh = new THREE.Mesh(box, wallMat);
                 mesh.position.set(x, h/2, z);
                 mesh.rotation.y = rotY;
                 mesh.castShadow = mesh.receiveShadow = true;
                 scene.add(mesh);
             }
-            addWall(9,0,18,th); addWall(18,6,th,12); addWall(9,12,18,th); addWall(0,6,th,12);
-            addWall(10,3.5,th,7); addWall(14,7,8,th); addWall(16,4,4,th); addWall(14,5.5,th,3);
+            // Outer walls (x from 0 to 14, z from 0 to 10)
+            addWall(7, 0, 14, th);   // bottom (entrance)
+            addWall(14, 5, th, 10);  // right
+            addWall(7, 10, 14, th);  // top (backyard)
+            addWall(0, 5, th, 10);   // left
 
-            // Doors
-            const doorMat=new THREE.MeshStandardMaterial({ color:0x8B5A2B });
-            const knobMat=new THREE.MeshStandardMaterial({ color:0xFFD700 });
-            const doorFront=new THREE.Mesh(new THREE.BoxGeometry(1,2,0.1),doorMat);
-            doorFront.position.set(5,1,0.05); doorFront.castShadow=true; scene.add(doorFront);
-            const knobFront=new THREE.Mesh(new THREE.SphereGeometry(0.08),knobMat);
-            knobFront.position.set(5,1,0.12); scene.add(knobFront);
-            const doorInt=new THREE.Mesh(new THREE.BoxGeometry(0.1,2,1),doorMat);
-            doorInt.position.set(10.05,1,3); doorInt.castShadow=true; scene.add(doorInt);
-            const knobInt=new THREE.Mesh(new THREE.SphereGeometry(0.08),knobMat);
-            knobInt.position.set(10.12,1,3); scene.add(knobInt);
-            const doorBath=new THREE.Mesh(new THREE.BoxGeometry(0.1,2,0.8),doorMat);
-            doorBath.position.set(14.05,1,4); doorBath.castShadow=true; scene.add(doorBath);
-            const knobBath=new THREE.Mesh(new THREE.SphereGeometry(0.08),knobMat);
-            knobBath.position.set(14.12,1,4); scene.add(knobBath);
+            // Internal walls
+            // vertical walls at x=5 and x=9 (full depth except bathroom area)
+            addWall(5, 3.5, th, 7);    // wall from z=0 to z=7 (between room1 & room2)
+            addWall(9, 3.5, th, 7);    // wall from z=0 to z=7 (between room2 & room3)
+            // bathroom walls (back section)
+            addWall(7, 8.5, 4, th);    // front wall of bathroom at z=7 (from x=5 to 9)
+            // side walls of bathroom (already partly covered by outer walls, but we need full height)
+            addWall(5, 8.5, th, 3);    // left bathroom wall (z=7 to 10)
+            addWall(9, 8.5, th, 3);    // right bathroom wall
 
-            // Porch
-            const porchMat=new THREE.MeshStandardMaterial({ color:0xc2b280 });
-            const porchBase=new THREE.Mesh(new THREE.BoxGeometry(4,0.2,2.5),porchMat);
-            porchBase.position.set(5,0,-1.2); porchBase.castShadow=true; scene.add(porchBase);
-            const porchRoof=new THREE.Mesh(new THREE.BoxGeometry(4.2,0.1,2.7),new THREE.MeshStandardMaterial({ color:0xaa7c4a }));
-            porchRoof.position.set(5,2.4,-1.2); porchRoof.castShadow=true; scene.add(porchRoof);
-            [[3,-1.2],[7,-1.2]].forEach(pos => {
-                const post=new THREE.Mesh(new THREE.BoxGeometry(0.2,2.2,0.2),new THREE.MeshStandardMaterial({ color:0x8B5A2B }));
-                post.position.set(pos[0],1.1,pos[1]); post.castShadow=true; scene.add(post);
-            });
+            // Door openings: we don't draw solid walls where doors exist, so we omit those wall segments.
+            // The internal walls above are continuous; but doors are indicated by absence of a wall section.
+            // For simplicity, we keep walls as boxes and rely on visual of doors (3D door models) placed over openings.
+            // We'll add simple door models (boxes) at each door location.
 
-            // Doghouse
-            const dogMat=new THREE.MeshStandardMaterial({ color:0xaa8c5e });
-            const dogBase=new THREE.Mesh(new THREE.BoxGeometry(1,0.5,1.2),dogMat);
-            dogBase.position.set(14,0.25,14); dogBase.castShadow=true; scene.add(dogBase);
-            const dogRoof=new THREE.Mesh(new THREE.CylinderGeometry(0.9,0.9,0.5,4),dogMat);
-            dogRoof.rotation.y=Math.PI/4; dogRoof.position.set(14,0.7,14); dogRoof.castShadow=true; scene.add(dogRoof);
-            const dogDoor=new THREE.Mesh(new THREE.BoxGeometry(0.4,0.4,0.05),new THREE.MeshStandardMaterial({ color:0xffaa66 }));
-            dogDoor.position.set(14.3,0.3,14); scene.add(dogDoor);
+            const doorMat = new THREE.MeshStandardMaterial({ color: 0x8B5A2B });
+            const knobMat = new THREE.MeshStandardMaterial({ color: 0xFFD700 });
 
-            // Floor
-            const floorMat=new THREE.MeshStandardMaterial({ color:0xbc9a6c, roughness:0.6, metalness:0.05, transparent:true, opacity:0.5 });
-            const floor=new THREE.Mesh(new THREE.BoxGeometry(18,0.1,12),floorMat);
-            floor.position.set(9,-0.05,6); floor.receiveShadow=true; scene.add(floor);
+            // Helper: add a door at (x, z, orientation: 'horizontal' or 'vertical')
+            function addDoor(x, z, orient) {
+                let door;
+                if (orient === 'horizontal') {
+                    door = new THREE.Mesh(new THREE.BoxGeometry(0.9, 2.0, 0.1), doorMat);
+                    door.position.set(x, 1.0, z);
+                } else {
+                    door = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.0, 0.9), doorMat);
+                    door.position.set(x, 1.0, z);
+                }
+                door.castShadow = true;
+                scene.add(door);
+                // add knob
+                const knob = new THREE.Mesh(new THREE.SphereGeometry(0.08), knobMat);
+                if (orient === 'horizontal') knob.position.set(x + (Math.abs(x-2.5)<0.5 ? 0.3 : -0.3), 1.0, z);
+                else knob.position.set(x, 1.0, z + (Math.abs(z-3)<0.5 ? 0.3 : -0.3));
+                scene.add(knob);
+            }
 
-            // Roof
-            const roofMat=new THREE.MeshStandardMaterial({ color:0xaa7777 });
-            const roof=new THREE.Mesh(new THREE.CylinderGeometry(9.5,9.5,1.2,4),roofMat);
-            roof.rotation.y=Math.PI/4; roof.position.set(9,2.9,6); roof.castShadow=true; scene.add(roof);
+            // Entrance doors (x=2.5 and x=11.5 at z=0)
+            addDoor(2.5, 0, 'horizontal');
+            addDoor(11.5, 0, 'horizontal');
+            // Door between room1 and room2 (x=5, z=3)
+            addDoor(5, 3, 'vertical');
+            // Doors from each room to bathroom (z=7)
+            addDoor(3, 7, 'horizontal');   // room1
+            addDoor(7, 7, 'horizontal');   // room2
+            addDoor(11, 7, 'horizontal');  // room3
+            // Three doors to backyard (z=10)
+            addDoor(2.5, 10, 'horizontal');
+            addDoor(7, 10, 'horizontal');
+            addDoor(11.5, 10, 'horizontal');
 
-            // Labels
+            // Simple floor slab (semi-transparent)
+            const floorMat = new THREE.MeshStandardMaterial({ color: 0xbc9a6c, roughness: 0.6, metalness: 0.05, transparent: true, opacity: 0.5 });
+            const floor = new THREE.Mesh(new THREE.BoxGeometry(14, 0.1, 10), floorMat);
+            floor.position.set(7, -0.05, 5);
+            floor.receiveShadow = true;
+            scene.add(floor);
+
+            // Roof (simple gabled)
+            const roofMat = new THREE.MeshStandardMaterial({ color: 0xaa7777 });
+            const roof = new THREE.Mesh(new THREE.CylinderGeometry(8, 8, 1.2, 4), roofMat);
+            roof.rotation.y = Math.PI/4;
+            roof.position.set(7, 3.2, 5);
+            roof.castShadow = true;
+            scene.add(roof);
+
+            // Labels (room names)
             function makeLabel(text,x,z,yOff=0.2) {
                 const div=document.createElement('div');
                 div.textContent=text;
                 div.style.cssText='color:#ffdd99; font-size:16px; font-weight:bold; background:rgba(0,0,0,0.5); padding:2px 8px; border-radius:16px; border:1px solid #ffaa66;';
                 const label=new CSS2DObject(div);
-                label.position.set(x,yOff,z);
+                label.position.set(x, yOff+1.0, z);
                 scene.add(label);
             }
-            makeLabel('LIVING ROOM',5,6); makeLabel('KITCHEN',14,3); makeLabel('BEDROOM 1',14,9.5);
-            makeLabel('BEDROOM 2',6,9.5); makeLabel('BATH',16,5.5); makeLabel('ENTRY',2,1);
-            makeLabel('FRONT YARD',9,-3,0.5); makeLabel('BACKYARD',9,16,0.5); makeLabel('PARKING',22,4,0.5);
-            makeLabel('DOGHOUSE',14,14.8,0.5);
+            makeLabel('ROOM 1', 2.5, 3);
+            makeLabel('ROOM 2', 7, 3);
+            makeLabel('ROOM 3', 11.5, 3);
+            makeLabel('BATHROOM', 7, 8.5);
+            makeLabel('BACKYARD', 7, 12, 0.5);
+            makeLabel('ENTRANCE', 2.5, -1, 0);
+            makeLabel('ENTRANCE', 11.5, -1, 0);
 
-            // Animation loop
+            // Simple front yard grass extension
+            const frontYardMat = new THREE.MeshStandardMaterial({ color: 0x5a9e4e });
+            const frontYard = new THREE.Mesh(new THREE.PlaneGeometry(14, 2), frontYardMat);
+            frontYard.rotation.x = -Math.PI/2;
+            frontYard.position.set(7, -0.12, -1.5);
+            frontYard.receiveShadow = true;
+            scene.add(frontYard);
+
             function animate() {
                 requestAnimationFrame(animate);
-                controls.update();   // updates autoRotate and damping
+                controls.update();
                 renderer.render(scene, camera);
                 labelRenderer.render(scene, camera);
             }
             animate();
-
-            // Resize handler
             window.addEventListener('resize', () => {
                 camera.aspect = window.innerWidth / window.innerHeight;
                 camera.updateProjectionMatrix();
@@ -320,8 +356,8 @@ def generate_3d_html():
     """
 
 # ---------- MAIN APP ----------
-st.title("🏠 House Logic Engine 360")
-st.markdown("Professional architectural plans – **2D blueprint** & **3D interactive model**.")
+st.title("🏠 Custom House Logic Engine")
+st.markdown("**3 rooms | Bathroom connected to all rooms | 3 backyard doors | 2 entrance doors**")
 
 view = st.radio("Select view:", ["2D Blueprint", "3D Model"], horizontal=True)
 
@@ -331,12 +367,13 @@ if view == "2D Blueprint":
     with st.expander("📐 Legend & Instructions"):
         st.markdown("""
         - **Black thick lines**: Walls  
-        - **Blue arcs & lines**: Doors (arc shows swing direction)  
+        - **Blue arcs**: Doors (arc shows swing direction)  
         - **Blue thick segments**: Windows  
         - **Red arrows**: Dimensions (meters)  
-        - **Green dashed lines**: Property boundaries (yard, parking)  
+        - **Green dashed lines**: Property boundaries  
+        - **Three rooms** – each connects to bathroom and backyard. Two entrance doors from main road.
         """)
 else:
-    st.markdown("### 🏡 3D Interactive Model – Full Property View")
-    st.markdown("🔄 **Auto‑rotating** – Drag to rotate manually | Scroll to zoom")
+    st.markdown("### 🏡 3D Interactive Model")
+    st.markdown("🖱️ **Left‑click + drag** to rotate | **Right‑click + drag** to pan | **Scroll** to zoom")
     components.html(generate_3d_html(), height=700, scrolling=False)
