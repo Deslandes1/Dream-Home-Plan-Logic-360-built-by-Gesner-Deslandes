@@ -108,7 +108,7 @@ def draw_2d_blueprint():
 
     return fig
 
-# ---------- 3D MODEL (Three.js) ----------
+# ---------- 3D MODEL (Three.js) with auto-rotate ----------
 def generate_3d_html():
     return """
     <!DOCTYPE html>
@@ -118,7 +118,7 @@ def generate_3d_html():
     </head>
     <body>
         <div id="info" style="position:absolute; top:20px; left:20px; color:white; background:rgba(0,0,0,0.6); padding:8px 15px; border-radius:8px; font-family:Arial; z-index:100; pointer-events:none;">
-            🏠 3D House Model – Drag to rotate | Right-click to pan | Scroll to zoom
+            🏠 3D House – Auto‑spinning | Drag to rotate | Scroll to zoom
         </div>
         <script type="importmap">
             {
@@ -149,8 +149,15 @@ def generate_3d_html():
             labelRenderer.domElement.style.top = '0px';
             labelRenderer.domElement.style.left = '0px';
             document.body.appendChild(labelRenderer.domElement);
+
+            // OrbitControls with autoRotate enabled
             const controls = new OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
+            controls.enableDamping = true;          // smooth inertia
+            controls.dampingFactor = 0.05;
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 1.0;        // speed (1.0 = ~8 seconds per full turn)
+            controls.enableZoom = true;
+            controls.enablePan = true;
             controls.target.set(9, 2, 6);
 
             // Lighting
@@ -291,18 +298,21 @@ def generate_3d_html():
             makeLabel('FRONT YARD',9,-3,0.5); makeLabel('BACKYARD',9,16,0.5); makeLabel('PARKING',22,4,0.5);
             makeLabel('DOGHOUSE',14,14.8,0.5);
 
+            // Animation loop
             function animate() {
                 requestAnimationFrame(animate);
-                controls.update();
-                renderer.render(scene,camera);
-                labelRenderer.render(scene,camera);
+                controls.update();   // updates autoRotate and damping
+                renderer.render(scene, camera);
+                labelRenderer.render(scene, camera);
             }
             animate();
-            window.addEventListener('resize',()=>{
-                camera.aspect=window.innerWidth/window.innerHeight;
+
+            // Resize handler
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
                 camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth,window.innerHeight);
-                labelRenderer.setSize(window.innerWidth,window.innerHeight);
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                labelRenderer.setSize(window.innerWidth, window.innerHeight);
             });
         </script>
     </body>
@@ -328,5 +338,5 @@ if view == "2D Blueprint":
         """)
 else:
     st.markdown("### 🏡 3D Interactive Model – Full Property View")
-    st.markdown("_Drag to rotate, right‑click to pan, scroll to zoom._")
+    st.markdown("🔄 **Auto‑rotating** – Drag to rotate manually | Scroll to zoom")
     components.html(generate_3d_html(), height=700, scrolling=False)
