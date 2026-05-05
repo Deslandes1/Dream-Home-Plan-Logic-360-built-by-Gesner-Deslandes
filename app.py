@@ -72,72 +72,108 @@ translations = {
     "English": {
         "view_2d": "2D Blueprint",
         "view_3d": "3D Interactive Model",
-        "rm1": "ROOM 1 (Entry)", "rm2": "ROOM 2", "rm3": "ROOM 3", "bath": "BATHROOM",
+        "rm1": "MASTER BEDROOM", "rm2": "LIVING AREA", "rm3": "GUEST ROOM", "bath": "BATHROOM",
         "legend": "📐 Blueprint Legend",
-        "logic": "Layout: 3 Rooms + 1 central Bath. All rooms have direct bathroom access. Two front entrances."
+        "logic": "Refined Layout: Professional wall thickness, window placements, and optimized flow."
     },
     "Français": {
         "view_2d": "Plan 2D",
         "view_3d": "Modèle 3D Interactif",
-        "rm1": "CHAMBRE 1 (Entrée)", "rm2": "CHAMBRE 2", "rm3": "CHAMBRE 3", "bath": "S.D.BAIN",
+        "rm1": "CHAMBRE PRINCIPALE", "rm2": "SALON", "rm3": "CHAMBRE D'AMIS", "bath": "S.D.BAIN",
         "legend": "📐 Légende du Plan",
-        "logic": "Disposition : 3 chambres + 1 bain central. Accès direct au bain pour toutes les chambres."
+        "logic": "Disposition raffinée : Épaisseur des murs, fenêtres et circulation optimisée."
     }
 }
 t = translations.get(lang, translations["English"])
 
 # ---------- APPLICATION HEADER ----------
 st.markdown('<div class="main-title">Dream Home PlanLogic 360</div>', unsafe_allow_html=True)
-st.markdown('<div class="main-subtitle">Built by Gesner Deslandes</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-subtitle">Designed by Gesner Deslandes</div>', unsafe_allow_html=True)
 
-# ---------- 2D DRAFTING ENGINE ----------
+# ---------- 2D DRAFTING ENGINE (Refined) ----------
 def draw_2d_blueprint(trans):
     fig, ax = plt.subplots(figsize=(10, 8))
-    ax.set_xlim(-2, 12)
-    ax.set_ylim(-2, 12)
+    ax.set_xlim(-1, 11)
+    ax.set_ylim(-1, 11)
     ax.set_aspect('equal')
     
-    ax.add_patch(patches.Rectangle((0, 0), 10, 10, linewidth=3, edgecolor='black', facecolor='none'))
-    ax.plot([0, 10], [5, 5], 'k-', lw=3) 
-    ax.plot([5, 5], [0, 5], 'k-', lw=3) 
-    ax.plot([5, 5], [7, 10], 'k-', lw=3) 
-    ax.add_patch(patches.Rectangle((4, 4), 2, 2, lw=2, color='skyblue', alpha=0.3))
-    ax.plot([1, 2.5], [0, 0], 'r-', lw=6) 
-    ax.plot([7.5, 9], [0, 0], 'r-', lw=6) 
+    # Exterior Walls (Thick)
+    ax.add_patch(patches.Rectangle((0, 0), 10, 10, linewidth=6, edgecolor='#333333', facecolor='#f9f9f9'))
     
-    ax.text(2.5, 2.5, trans['rm1'], ha='center', weight='bold')
-    ax.text(7.5, 2.5, trans['rm3'], ha='center', weight='bold')
-    ax.text(5, 8, trans['rm2'], ha='center', weight='bold')
-    ax.text(5, 5, trans['bath'], ha='center', size=9, color='blue', weight='bold')
+    # Interior Walls
+    ax.plot([0, 10], [5, 5], color='#333333', lw=4) # Horizontal Split
+    ax.plot([5, 5], [0, 5], color='#333333', lw=4) # Lower vertical split
+    
+    # Bathroom Box (Central)
+    ax.add_patch(patches.Rectangle((4, 4), 2, 2, lw=2, edgecolor='blue', facecolor='#e0f2fe'))
+    
+    # Doors (Red indicators)
+    ax.plot([1.5, 3], [0, 0], 'r-', lw=8) # Main Entrance
+    ax.plot([5, 5], [1, 2.5], 'r-', lw=4) # Internal door
+    
+    # Windows (Blue indicators)
+    ax.plot([0, 0], [7, 8.5], 'cyan', lw=4) # Window Left
+    ax.plot([10, 10], [7, 8.5], 'cyan', lw=4) # Window Right
+
+    # Room Labels
+    ax.text(2.5, 2.5, trans['rm1'], ha='center', weight='bold', fontsize=10)
+    ax.text(7.5, 2.5, trans['rm3'], ha='center', weight='bold', fontsize=10)
+    ax.text(5, 7.5, trans['rm2'], ha='center', weight='bold', fontsize=12)
+    ax.text(5, 5, trans['bath'], ha='center', size=8, color='blue', weight='bold')
 
     ax.axis('off')
     return fig
 
-# ---------- 3D WEBGL ENGINE ----------
+# ---------- 3D WEBGL ENGINE (Refined with Roof) ----------
 def generate_3d_view():
     html_code = """
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <div id="container" style="width: 100%; height: 600px; border-radius: 15px; overflow: hidden;"></div>
+    <div id="container" style="width: 100%; height: 600px; border-radius: 15px; overflow: hidden; background: #111;"></div>
     <script>
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x222222);
+        scene.background = new THREE.Color(0x1a1a1a);
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth/600, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({antialias: true});
         renderer.setSize(window.innerWidth, 600);
         document.getElementById('container').appendChild(renderer.domElement);
-        const light = new THREE.PointLight(0xffffff, 1, 100);
-        light.position.set(10, 10, 10);
+
+        // Lights
+        const light = new THREE.DirectionalLight(0xffffff, 1);
+        light.position.set(5, 10, 7).normalize();
         scene.add(light);
-        scene.add(new THREE.AmbientLight(0x888888));
-        const geometry = new THREE.BoxGeometry(10, 3, 10);
-        const material = new THREE.MeshPhongMaterial({color: 0x44aaee, wireframe: true});
-        const house = new THREE.Mesh(geometry, material);
-        scene.add(house);
-        camera.position.set(8, 8, 8);
-        camera.lookAt(0,0,0);
+        scene.add(new THREE.AmbientLight(0x404040));
+
+        const group = new THREE.Group();
+
+        // Floor
+        const floorGeo = new THREE.BoxGeometry(10.5, 0.2, 10.5);
+        const floorMat = new THREE.MeshPhongMaterial({color: 0x888888});
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        group.add(floor);
+
+        // Main House Body (Solid Walls)
+        const houseGeo = new THREE.BoxGeometry(10, 3, 10);
+        const houseMat = new THREE.MeshPhongMaterial({color: 0xffffff, transparent: true, opacity: 0.9});
+        const house = new THREE.Mesh(houseGeo, houseMat);
+        house.position.y = 1.6;
+        group.add(house);
+
+        // Roof (Pyramid style)
+        const roofGeo = new THREE.ConeGeometry(8, 4, 4);
+        const roofMat = new THREE.MeshPhongMaterial({color: 0x8b0000});
+        const roof = new THREE.Mesh(roofGeo, roofMat);
+        roof.position.y = 5;
+        roof.rotation.y = Math.PI / 4;
+        group.add(roof);
+
+        scene.add(group);
+
+        camera.position.set(12, 10, 12);
+        camera.lookAt(0, 2, 0);
+
         function animate() {
             requestAnimationFrame(animate);
-            house.rotation.y += 0.01;
+            group.rotation.y += 0.005;
             renderer.render(scene, camera);
         }
         animate();
