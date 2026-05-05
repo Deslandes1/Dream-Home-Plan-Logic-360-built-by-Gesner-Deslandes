@@ -30,7 +30,7 @@ with st.sidebar:
     st.subheader("💰 Licensing")
     st.write("One‑time payment. No subscriptions.")
     st.markdown("---")
-    st.info("💡 Professional 3D model with visible doors, bathroom fixtures.")
+    st.info("💡 Professional 3D model with labeled entrance, backyard, interior & bathroom doors.")
 
 # ---------- DOOR ARC HELPER (for 2D) ----------
 def draw_arc_door(ax, center, radius, orient_deg, swing_sign, lw):
@@ -105,7 +105,7 @@ def draw_2d_blueprint():
 
     return fig
 
-# ---------- 3D MODEL (professional – visible doors, bathroom) ----------
+# ---------- 3D MODEL (with labeled doors) ----------
 def generate_3d_html():
     return """
     <!DOCTYPE html>
@@ -166,7 +166,7 @@ def generate_3d_html():
             labelRenderer.domElement.style.pointerEvents = 'none';
             document.body.appendChild(labelRenderer.domElement);
             
-            // --- OrbitControls with full interaction ---
+            // --- OrbitControls ---
             const controls = new OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
             controls.dampingFactor = 0.05;
@@ -245,15 +245,15 @@ def generate_3d_html():
             addWall(14, 5, th, 10);
             addWall(7, 10, 14, th);
             addWall(0, 5, th, 10);
-            // Internal walls
+            // Internal
             addWall(5, 3.5, th, 7);
             addWall(9, 3.5, th, 7);
             addWall(7, 8.5, 4, th);
             addWall(5, 8.5, th, 3);
             addWall(9, 8.5, th, 3);
             
-            // --- Professional Doors (with frame and handle) ---
-            const doorMaterial = new THREE.MeshStandardMaterial({ color: 0xd2a679, roughness: 0.2 }); // wood
+            // --- Professional Door with frame and knob ---
+            const doorMaterial = new THREE.MeshStandardMaterial({ color: 0xd2a679, roughness: 0.2 });
             const frameMaterial = new THREE.MeshStandardMaterial({ color: 0xaa8866 });
             const knobMaterial = new THREE.MeshStandardMaterial({ color: 0xffaa33, metalness: 0.8 });
             
@@ -261,7 +261,6 @@ def generate_3d_html():
                 const width = 0.9, height = 2.0, depth = 0.1;
                 const frameThick = 0.05;
                 const frameMargin = 0.03;
-                // Door panel
                 let door;
                 if (orient === 'horizontal') {
                     door = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), doorMaterial);
@@ -272,44 +271,26 @@ def generate_3d_html():
                 }
                 door.castShadow = true;
                 scene.add(door);
-                // Simple frame: four thin boxes around the door
+                // frame
                 if (orient === 'horizontal') {
-                    const frameTop = new THREE.Mesh(new THREE.BoxGeometry(width+frameMargin*2, frameThick, depth+0.02), frameMaterial);
-                    frameTop.position.set(x, 1.0 + height/2 - frameThick/2, z);
-                    frameTop.castShadow = true;
-                    scene.add(frameTop);
-                    const frameBottom = new THREE.Mesh(new THREE.BoxGeometry(width+frameMargin*2, frameThick, depth+0.02), frameMaterial);
-                    frameBottom.position.set(x, 1.0 - height/2 + frameThick/2, z);
-                    frameBottom.castShadow = true;
-                    scene.add(frameBottom);
-                    const frameLeft = new THREE.Mesh(new THREE.BoxGeometry(frameThick, height, depth+0.02), frameMaterial);
-                    frameLeft.position.set(x - width/2 - frameMargin, 1.0, z);
-                    frameLeft.castShadow = true;
-                    scene.add(frameLeft);
-                    const frameRight = new THREE.Mesh(new THREE.BoxGeometry(frameThick, height, depth+0.02), frameMaterial);
-                    frameRight.position.set(x + width/2 + frameMargin, 1.0, z);
-                    frameRight.castShadow = true;
-                    scene.add(frameRight);
+                    const top = new THREE.Mesh(new THREE.BoxGeometry(width+frameMargin*2, frameThick, depth+0.02), frameMaterial);
+                    top.position.set(x, 1.0 + height/2 - frameThick/2, z); scene.add(top);
+                    const bottom = new THREE.Mesh(new THREE.BoxGeometry(width+frameMargin*2, frameThick, depth+0.02), frameMaterial);
+                    bottom.position.set(x, 1.0 - height/2 + frameThick/2, z); scene.add(bottom);
+                    const left = new THREE.Mesh(new THREE.BoxGeometry(frameThick, height, depth+0.02), frameMaterial);
+                    left.position.set(x - width/2 - frameMargin, 1.0, z); scene.add(left);
+                    const right = new THREE.Mesh(new THREE.BoxGeometry(frameThick, height, depth+0.02), frameMaterial);
+                    right.position.set(x + width/2 + frameMargin, 1.0, z); scene.add(right);
                 } else {
-                    // vertical orientation (door swings along Z)
-                    const frameTop = new THREE.Mesh(new THREE.BoxGeometry(depth+0.02, frameThick, width+frameMargin*2), frameMaterial);
-                    frameTop.position.set(x, 1.0 + height/2 - frameThick/2, z);
-                    frameTop.castShadow = true;
-                    scene.add(frameTop);
-                    const frameBottom = new THREE.Mesh(new THREE.BoxGeometry(depth+0.02, frameThick, width+frameMargin*2), frameMaterial);
-                    frameBottom.position.set(x, 1.0 - height/2 + frameThick/2, z);
-                    frameBottom.castShadow = true;
-                    scene.add(frameBottom);
-                    const frameLeft = new THREE.Mesh(new THREE.BoxGeometry(depth+0.02, height, frameThick), frameMaterial);
-                    frameLeft.position.set(x, 1.0, z - width/2 - frameMargin);
-                    frameLeft.castShadow = true;
-                    scene.add(frameLeft);
-                    const frameRight = new THREE.Mesh(new THREE.BoxGeometry(depth+0.02, height, frameThick), frameMaterial);
-                    frameRight.position.set(x, 1.0, z + width/2 + frameMargin);
-                    frameRight.castShadow = true;
-                    scene.add(frameRight);
+                    const top = new THREE.Mesh(new THREE.BoxGeometry(depth+0.02, frameThick, width+frameMargin*2), frameMaterial);
+                    top.position.set(x, 1.0 + height/2 - frameThick/2, z); scene.add(top);
+                    const bottom = new THREE.Mesh(new THREE.BoxGeometry(depth+0.02, frameThick, width+frameMargin*2), frameMaterial);
+                    bottom.position.set(x, 1.0 - height/2 + frameThick/2, z); scene.add(bottom);
+                    const left = new THREE.Mesh(new THREE.BoxGeometry(depth+0.02, height, frameThick), frameMaterial);
+                    left.position.set(x, 1.0, z - width/2 - frameMargin); scene.add(left);
+                    const right = new THREE.Mesh(new THREE.BoxGeometry(depth+0.02, height, frameThick), frameMaterial);
+                    right.position.set(x, 1.0, z + width/2 + frameMargin); scene.add(right);
                 }
-                // Knob
                 const knob = new THREE.Mesh(new THREE.SphereGeometry(0.08, 16, 16), knobMaterial);
                 if (orient === 'horizontal') knob.position.set(x + 0.3, 1.0, z + 0.06);
                 else knob.position.set(x + 0.06, 1.0, z + 0.3);
@@ -327,14 +308,32 @@ def generate_3d_html():
             addDoorWithFrame(7, 10, 'horizontal');    // room2 -> backyard
             addDoorWithFrame(11.5, 10, 'horizontal'); // room3 -> backyard
             
-            // --- Bathroom specific features ---
-            // Different floor inside bathroom (light blue tile)
+            // --- Door Labels (CSS2D) to make each door identifiable ---
+            function makeDoorLabel(text, x, z, yOff=1.0) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                div.style.cssText = 'color:#ffaa66; font-size:12px; font-weight:bold; background:rgba(0,0,0,0.7); padding:2px 6px; border-radius:12px; border:1px solid #ffaa66; white-space: nowrap;';
+                const label = new CSS2DObject(div);
+                label.position.set(x, yOff + 0.5, z);
+                scene.add(label);
+            }
+            makeDoorLabel('Entrance Door', 2.5, 0, 0);
+            makeDoorLabel('Entrance Door', 11.5, 0, 0);
+            makeDoorLabel('To Room 2', 5, 3, 0);
+            makeDoorLabel('To Bathroom', 3, 7, 0);
+            makeDoorLabel('To Bathroom', 7, 7, 0);
+            makeDoorLabel('To Bathroom', 11, 7, 0);
+            makeDoorLabel('Backyard Door', 2.5, 10, 0);
+            makeDoorLabel('Backyard Door', 7, 10, 0);
+            makeDoorLabel('Backyard Door', 11.5, 10, 0);
+            
+            // --- Bathroom features (toilet, sink, shower) ---
             const bathFloorMat = new THREE.MeshStandardMaterial({ color: 0x88aaff, roughness: 0.3, metalness: 0.1 });
             const bathFloor = new THREE.Mesh(new THREE.BoxGeometry(4, 0.05, 3), bathFloorMat);
             bathFloor.position.set(7, -0.08, 8.5);
             bathFloor.receiveShadow = true;
             scene.add(bathFloor);
-            // Simple toilet (white box with cylinder)
+            // Toilet
             const toiletBase = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.8), new THREE.MeshStandardMaterial({ color: 0xffffff }));
             toiletBase.position.set(5.5, 0.1, 9);
             toiletBase.castShadow = true;
@@ -348,14 +347,14 @@ def generate_3d_html():
             sink.position.set(8.5, 0.2, 9);
             sink.castShadow = true;
             scene.add(sink);
-            // Shower (glass panels)
+            // Shower glass
             const showerGlass = new THREE.MeshStandardMaterial({ color: 0x88aaff, transparent: true, opacity: 0.4 });
             const showerPanel = new THREE.Mesh(new THREE.BoxGeometry(0.05, 2.0, 1.2), showerGlass);
             showerPanel.position.set(7.7, 1.0, 9.3);
             showerPanel.castShadow = true;
             scene.add(showerPanel);
             
-            // --- Interior floors for rooms (wood look) ---
+            // --- Wood floors for rooms ---
             const woodMat = new THREE.MeshStandardMaterial({ color: 0xbc9a6c, roughness: 0.6 });
             const room1Floor = new THREE.Mesh(new THREE.BoxGeometry(5, 0.05, 7), woodMat);
             room1Floor.position.set(2.5, -0.08, 3.5);
@@ -370,7 +369,7 @@ def generate_3d_html():
             room3Floor.receiveShadow = true;
             scene.add(room3Floor);
             
-            // --- Roof (simple gable) ---
+            // --- Roof ---
             const roofMat = new THREE.MeshStandardMaterial({ color: 0xaa7777 });
             const roof = new THREE.Mesh(new THREE.CylinderGeometry(8, 8, 1.2, 4), roofMat);
             roof.rotation.y = Math.PI/4;
@@ -378,7 +377,7 @@ def generate_3d_html():
             roof.castShadow = true;
             scene.add(roof);
             
-            // --- Labels (CSS2D) ---
+            // --- Room labels (permanent) ---
             function makeLabel(text, x, z, yOff=1.2) {
                 const div = document.createElement('div');
                 div.textContent = text;
@@ -411,7 +410,6 @@ def generate_3d_html():
             }
             animate();
             
-            // --- Resize handler ---
             window.addEventListener('resize', () => {
                 camera.aspect = window.innerWidth / window.innerHeight;
                 camera.updateProjectionMatrix();
@@ -442,6 +440,6 @@ if view == "2D Blueprint":
         - Three rooms – each connects to bathroom and backyard. Two entrance doors from main road.
         """)
 else:
-    st.markdown("### 🏡 3D Interactive Model – Professional Engineering View")
+    st.markdown("### 🏡 3D Interactive Model – Engineering Drawings with All Doors Labeled")
     st.markdown("🖱️ **Left‑click + drag** to rotate | **Right‑click + drag** to pan | **Scroll** to zoom")
     components.html(generate_3d_html(), height=700, scrolling=False)
