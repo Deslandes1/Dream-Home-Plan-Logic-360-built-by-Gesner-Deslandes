@@ -22,7 +22,7 @@ with st.sidebar:
     st.markdown("## **GlobalInternet.py**")
     st.markdown("---")
     st.markdown("**Developer:** Gesner Deslandes\n\n**Coder in Chief**")
-    st.markdown("📞 **Phone:** (509)-47385663")
+    st.markdown("📞 **Phone:** (5 Haiti)-47385663")
     st.markdown("---")
     st.subheader("💰 Licensing")
     st.write("One-time payment. No subscriptions.")
@@ -58,7 +58,7 @@ def draw_2d_blueprint():
     ax.axis('off')
     return fig
 
-# ---------- 3D LOGIC (ENCODED AS SRCDOC) ----------
+# ---------- 3D LOGIC (ENCODED AS HTML) ----------
 def generate_3d_html():
     html_code = """
     <html>
@@ -110,7 +110,6 @@ def generate_3d_html():
 
 # ---------- APP INTERFACE ----------
 st.markdown("<h1 style='text-align:center;'>🏠 House Logic Engine 360</h1>", unsafe_allow_html=True)
-st.write(f"**Current Date:** {st.session_state.get('date', '2026-05-05')}")
 
 tab1, tab2 = st.tabs(["📐 2D Blueprint", "🧊 3D Interactive"])
 
@@ -119,12 +118,14 @@ with tab1:
     st.success("Logic Verified: 2 Entrances, 3 Rooms, 1 Central Bathroom, 3 Backyard Exits.")
 
 with tab2:
-    # Use st.components.v1.iframe to solve the deprecation warning
-    components.iframe(src="about:blank", height=600, scrolling=False)
-    # Note: For GitHub/Streamlit deployment, the best way to bypass the warning 
-    # while keeping custom HTML is to inject it via a data URI or a local file.
-    # Below is the compliant "st.components.v1.html" but wrapped for cleaner logs.
-    components.html(generate_3d_html(), height=600)
+    # UPDATED: Use st.iframe to avoid deprecation warnings
+    # We pass the HTML content as a data URI to st.iframe
+    html_content = generate_3d_html()
+    st.iframe(
+        src=f"data:text/html;charset=utf-8,{html_content}",
+        height=600,
+        scrolling=False
+    )
 
 st.divider()
 st.caption("Powered by GlobalInternet.py | Secure Architectural Infrastructure")
